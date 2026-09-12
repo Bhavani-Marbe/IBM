@@ -1,501 +1,990 @@
 import { useEffect, useState } from "react";
-
 import {
   ArrowLeft,
   Brain,
   CheckCircle2,
   ChevronRight,
-  Leaf,
   ShieldCheck,
-  Sprout,
   TrendingUp,
   Users,
 } from "lucide-react";
 
-function CreditReadiness({ onBack, onDataControl }) {
+const FARMER_ID = "FRM-E54DDC4D";
+
+function getStrengthLabel(value) {
+  if (value >= 75) return "Strong";
+  if (value >= 55) return "Medium";
+  return "Developing";
+}
+
+function getReadinessLabel(value) {
+  if (value >= 75) return "Strong Readiness";
+  if (value >= 55) return "Developing";
+  return "Low Readiness";
+}
+
+function getRiskLabel(value) {
+  if (value >= 70) return "High";
+  if (value >= 50) return "Medium";
+  return "Low";
+}
+
+function CreditReadiness({
+  onBack,
+  onDataControl,
+  onActivity,
+}) {
   const [intelligence, setIntelligence] = useState(null);
-  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetch(
-      "http://127.0.0.1:8000/api/v1/credit-intelligence/FRM-E54DDC4D"
+      `http://127.0.0.1:8000/api/v1/credit-intelligence/${FARMER_ID}`
     )
       .then((response) => {
         if (!response.ok) {
-          throw new Error("Failed to fetch credit intelligence");
+          throw new Error(
+            "Unable to load credit intelligence."
+          );
         }
 
         return response.json();
       })
       .then((data) => {
-        console.log("AgriTrust Intelligence:", data);
         setIntelligence(data);
       })
-      .catch((error) => {
-        console.error("Error fetching credit intelligence:", error);
-        setError("Unable to load credit intelligence.");
+      .catch((err) => {
+        setError(err.message);
+      })
+      .finally(() => {
+        setLoading(false);
       });
   }, []);
 
-  if (error) {
+  if (loading) {
     return (
-      <div className="credit-page">
-        <div className="credit-container">
-          <p>{error}</p>
-
-          <button className="back-button" onClick={onBack}>
-            <ArrowLeft size={17} />
-            Back to Dashboard
-          </button>
-        </div>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "#166534",
+          fontWeight: "700",
+        }}
+      >
+        Loading your credit readiness...
       </div>
     );
   }
 
-  if (!intelligence) {
+  if (error || !intelligence) {
     return (
-      <div className="credit-page">
-        <div className="credit-container">
-          <p>Loading credit intelligence...</p>
-        </div>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "15px",
+        }}
+      >
+        <p style={{ color: "#991b1b" }}>
+          {error || "Credit intelligence unavailable."}
+        </p>
+
+        <button
+          onClick={onBack}
+          style={{
+            padding: "10px 18px",
+            border: "none",
+            borderRadius: "8px",
+            background: "#166534",
+            color: "#ffffff",
+            cursor: "pointer",
+          }}
+        >
+          Go Back
+        </button>
       </div>
     );
   }
 
-  // Convert the backend score into a percentage for the UI.
-  const score = intelligence.credit_readiness;
+  const score = Number(
+    intelligence.credit_readiness || 0
+  );
 
-  // Agricultural risk is represented by the backend as a risk factor:
-  // lower is better. Therefore the UI strength is its inverse.
+  /*
+   * The backend's agricultural_risk is a risk value:
+   * higher = more agricultural risk.
+   *
+   * For the farmer-facing "strength" display, we invert it.
+   */
   const agriculturalRiskStrength =
-    100 - intelligence.agricultural_risk;
+    100 - Number(intelligence.agricultural_risk || 0);
 
-  const getStrengthLabel = (value) => {
-    if (value >= 75) return "High";
-    if (value >= 55) return "Medium";
-    return "Low";
-  };
+  const signalRows = [
+    {
+      name: "Production Stability",
+      value: Number(
+        intelligence.production_stability || 0
+      ),
+      icon: <TrendingUp size={19} />,
+    },
+    {
+      name: "Market Stability",
+      value: Number(
+        intelligence.market_stability || 0
+      ),
+      icon: <TrendingUp size={19} />,
+    },
+    {
+      name: "Agricultural Risk",
+      value: agriculturalRiskStrength,
+      icon: <ShieldCheck size={19} />,
+    },
+    {
+      name: "FPO Strength",
+      value: Number(intelligence.fpo_strength || 0),
+      icon: <Users size={19} />,
+    },
+  ];
 
-  const getRiskLabel = (riskLevel) => {
-    if (riskLevel === "low") return "Low Agricultural Risk";
-    if (riskLevel === "medium") return "Moderate Agricultural Risk";
-    return "High Agricultural Risk";
-  };
+  const breakdownRows = [
+    {
+      name: "Production Stability",
+      value: Number(
+        intelligence.production_stability || 0
+      ),
+      weight: "25%",
+    },
+    {
+      name: "Market Stability",
+      value: Number(
+        intelligence.market_stability || 0
+      ),
+      weight: "20%",
+    },
+    {
+      name: "Repayment Strength",
+      value: Number(
+        intelligence.repayment_strength || 0
+      ),
+      weight: "25%",
+    },
+    {
+      name: "Agricultural Risk Strength",
+      value: agriculturalRiskStrength,
+      weight: "20%",
+    },
+    {
+      name: "FPO Strength",
+      value: Number(intelligence.fpo_strength || 0),
+      weight: "10%",
+    },
+  ];
 
-  const initials = intelligence.farmer_name
-    ? intelligence.farmer_name
-        .split(" ")
-        .map((name) => name[0])
-        .join("")
-        .slice(0, 2)
-        .toUpperCase()
-    : "RK";
+  const aiInsight =
+    score >= 75
+      ? "Your verified activity shows strong credit-readiness signals. Maintaining consistent repayments and verified agricultural activity can help preserve this position."
+      : score >= 55
+      ? "Your profile shows developing credit-readiness. Increasing verified market activity, maintaining repayment records, and strengthening FPO participation could improve your profile."
+      : "Your current profile has limited verified strength. Building consistent verified agricultural activity and repayment history can help improve future credit readiness.";
+
+  const improvementTips = [
+    "Maintain consistent and verifiable crop-sale records.",
+    "Keep loan repayment activity up to date.",
+    "Increase the amount of agricultural activity that can be independently verified.",
+    "Strengthen participation and documentation through your FPO.",
+  ];
 
   return (
-    <div className="credit-page">
-
-      {/* Header */}
-      <header className="dashboard-header">
-        <div className="brand">
-          <div className="brand-icon">
-            <Sprout size={22} />
-          </div>
-
-          <span>AgriTrust</span>
-        </div>
-
-        <div className="header-actions">
-          <div className="profile-avatar">
-            {initials}
-          </div>
-        </div>
-      </header>
-
-      {/* Main */}
-      <main className="credit-container">
-
+    <div
+      className="app"
+      style={{
+        minHeight: "100vh",
+        background: "#f8fafc",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: "1100px",
+          margin: "0 auto",
+          padding: "30px 20px 60px",
+        }}
+      >
+        {/* Back */}
         <button
-          className="back-button"
           onClick={onBack}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            border: "none",
+            background: "transparent",
+            color: "#166534",
+            fontWeight: "700",
+            cursor: "pointer",
+            marginBottom: "22px",
+          }}
         >
-          <ArrowLeft size={17} />
-          Back to Dashboard
+          <ArrowLeft size={19} />
+          Back to Farmer Dashboard
         </button>
 
-        {/* Heading */}
-        <section className="credit-heading">
-          <p className="dashboard-label">
-            AGRITRUST CREDIT INTELLIGENCE
-          </p>
-
-          <h1>
-            Your Credit Readiness
-          </h1>
-
-          <p>
-            An explainable assessment based on your verified
-            agricultural activity.
-          </p>
-        </section>
-
-        {/* Score */}
-        <section className="score-panel">
-
-          <div className="large-score">
-
-            <div className="large-score-circle">
-              <div>
-                <strong>{score}</strong>
-                <span>/100</span>
-              </div>
-            </div>
+        {/* Header */}
+        <div
+          style={{
+            background: "#14532d",
+            color: "#ffffff",
+            borderRadius: "18px",
+            padding: "30px",
+            marginBottom: "24px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+            }}
+          >
+            <Brain size={32} />
 
             <div>
-              <p>Credit Readiness</p>
+              <h1
+                style={{
+                  margin: 0,
+                  fontSize: "30px",
+                }}
+              >
+                Credit Readiness
+              </h1>
 
-              <h2>
-                {getStrengthLabel(score)} Readiness
-              </h2>
+              <p
+                style={{
+                  margin: "7px 0 0",
+                  opacity: 0.9,
+                  lineHeight: "1.5",
+                }}
+              >
+                An explainable view of the agricultural signals
+                contributing to your credit identity.
+              </p>
+            </div>
+          </div>
+        </div>
 
-              <span>
-                Based on your agricultural activity and
-                verified transaction history.
+        {/* Score + overview */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "310px 1fr",
+            gap: "22px",
+          }}
+        >
+          {/* Main score */}
+          <div
+            style={{
+              background: "#14532d",
+              color: "#ffffff",
+              borderRadius: "18px",
+              padding: "30px",
+              textAlign: "center",
+            }}
+          >
+            <ShieldCheck size={34} />
+
+            <div
+              style={{
+                fontSize: "13px",
+                fontWeight: "700",
+                letterSpacing: "0.5px",
+                marginTop: "15px",
+                opacity: 0.85,
+              }}
+            >
+              CREDIT READINESS
+            </div>
+
+            <div
+              style={{
+                fontSize: "64px",
+                lineHeight: "1",
+                fontWeight: "800",
+                marginTop: "15px",
+              }}
+            >
+              {score}
+              <span
+                style={{
+                  fontSize: "24px",
+                  opacity: 0.75,
+                }}
+              >
+                /100
               </span>
             </div>
 
+            <h2
+              style={{
+                margin: "15px 0 5px",
+              }}
+            >
+              {getReadinessLabel(score)}
+            </h2>
+
+            <p
+              style={{
+                margin: 0,
+                opacity: 0.85,
+              }}
+            >
+              {intelligence.risk_level} Risk
+            </p>
           </div>
 
-          <div className="risk-badge">
-            <CheckCircle2 size={17} />
+          {/* Signal analysis */}
+          <div
+            style={{
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "18px",
+              padding: "26px",
+            }}
+          >
+            <h2
+              style={{
+                marginTop: 0,
+                color: "#14532d",
+              }}
+            >
+              Signal Analysis
+            </h2>
 
-            {getRiskLabel(intelligence.risk_level)}
-          </div>
+            <p
+              style={{
+                color: "#64748b",
+                fontSize: "14px",
+              }}
+            >
+              These signals explain the major factors behind
+              your current readiness level.
+            </p>
 
-        </section>
-
-        {/* Signals */}
-        <section className="credit-section">
-
-          <div className="credit-section-heading">
-            <div>
-              <p className="dashboard-label">
-                SIGNAL ANALYSIS
-              </p>
-
-              <h2>
-                What is driving your assessment?
-              </h2>
-            </div>
-          </div>
-
-          <div className="signal-grid">
-
-            {/* Production */}
-            <div className="credit-signal-card">
-
-              <div className="credit-signal-icon">
-                <Sprout size={22} />
-              </div>
-
-              <div className="credit-signal-info">
-
-                <span>
-                  Production Stability
-                </span>
-
-                <strong>
-                  {getStrengthLabel(
-                    intelligence.production_stability
-                  )}
-                </strong>
-
-                <div className="signal-bar">
-                  <div
-                    style={{
-                      width: `${intelligence.production_stability}%`,
-                    }}
-                  ></div>
-                </div>
-
-              </div>
-
-            </div>
-
-            {/* Market */}
-            <div className="credit-signal-card">
-
-              <div className="credit-signal-icon">
-                <TrendingUp size={22} />
-              </div>
-
-              <div className="credit-signal-info">
-
-                <span>
-                  Market Stability
-                </span>
-
-                <strong>
-                  {getStrengthLabel(
-                    intelligence.market_stability
-                  )}
-                </strong>
-
-                <div className="signal-bar">
-                  <div
-                    style={{
-                      width: `${intelligence.market_stability}%`,
-                    }}
-                  ></div>
-                </div>
-
-              </div>
-
-            </div>
-
-            {/* Agricultural Risk */}
-            <div className="credit-signal-card">
-
-              <div className="credit-signal-icon">
-                <ShieldCheck size={22} />
-              </div>
-
-              <div className="credit-signal-info">
-
-                <span>
-                  Agricultural Risk
-                </span>
-
-                <strong>
-                  {getStrengthLabel(
-                    agriculturalRiskStrength
-                  )}
-                </strong>
-
-                <div className="signal-bar">
-                  <div
-                    style={{
-                      width: `${agriculturalRiskStrength}%`,
-                    }}
-                  ></div>
-                </div>
-
-              </div>
-
-            </div>
-
-            {/* FPO */}
-            <div className="credit-signal-card">
-
-              <div className="credit-signal-icon">
-                <Users size={22} />
-              </div>
-
-              <div className="credit-signal-info">
-
-                <span>
-                  FPO Strength
-                </span>
-
-                <strong>
-                  {getStrengthLabel(
-                    intelligence.fpo_strength
-                  )}
-                </strong>
-
-                <div className="signal-bar">
-                  <div
-                    style={{
-                      width: `${intelligence.fpo_strength}%`,
-                    }}
-                  ></div>
-                </div>
-
-              </div>
-
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* Repayment Strength */}
-        <section className="credit-section">
-
-          <div className="credit-section-heading">
-            <div>
-              <p className="dashboard-label">
-                REPAYMENT SIGNAL
-              </p>
-
-              <h2>
-                Repayment Strength
-              </h2>
-            </div>
-          </div>
-
-          <div className="credit-signal-card">
-
-            <div className="credit-signal-icon">
-              <ShieldCheck size={22} />
-            </div>
-
-            <div className="credit-signal-info">
-
-              <span>
-                Repayment Strength
-              </span>
-
-              <strong>
-                {getStrengthLabel(
-                  intelligence.repayment_strength
-                )}
-              </strong>
-
-              <div className="signal-bar">
+            {signalRows.map((signal) => (
+              <div
+                key={signal.name}
+                style={{
+                  marginTop: "19px",
+                }}
+              >
                 <div
                   style={{
-                    width: `${intelligence.repayment_strength}%`,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
                   }}
-                ></div>
-              </div>
-
-            </div>
-
-          </div>
-
-        </section>
-
-        {/* Explanation */}
-        <section className="explanation-card">
-
-          <div className="explanation-header">
-
-            <div className="explanation-icon">
-              <Brain size={22} />
-            </div>
-
-            <div>
-              <p>EXPLAINABLE AI</p>
-              <h2>Why this assessment?</h2>
-            </div>
-
-          </div>
-
-          <div className="explanation-list">
-
-            {intelligence.explanation &&
-              intelligence.explanation.map((item, index) => (
-                <div key={index}>
-                  <CheckCircle2 size={18} />
-
-                  <span>
-                    {item}
-                  </span>
-                </div>
-              ))}
-
-            {intelligence.risk_factors &&
-              intelligence.risk_factors.map((item, index) => (
-                <div
-                  className="risk-explanation"
-                  key={`risk-${index}`}
                 >
-                  <Leaf size={18} />
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      color: "#334155",
+                    }}
+                  >
+                    <span style={{ color: "#166534" }}>
+                      {signal.icon}
+                    </span>
 
-                  <span>
-                    {item}
+                    <strong>{signal.name}</strong>
+                  </div>
+
+                  <span
+                    style={{
+                      color: "#64748b",
+                      fontSize: "13px",
+                    }}
+                  >
+                    {getStrengthLabel(signal.value)}
                   </span>
                 </div>
-              ))}
 
+                <div
+                  style={{
+                    height: "9px",
+                    background: "#e2e8f0",
+                    borderRadius: "10px",
+                    marginTop: "8px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${Math.max(
+                        0,
+                        Math.min(100, signal.value)
+                      )}%`,
+                      height: "100%",
+                      background: "#166534",
+                      borderRadius: "10px",
+                    }}
+                  />
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginTop: "4px",
+                    fontSize: "12px",
+                    color: "#94a3b8",
+                  }}
+                >
+                  <span>0</span>
+                  <span>{signal.value}/100</span>
+                </div>
+              </div>
+            ))}
           </div>
+        </div>
 
+        {/* Score breakdown */}
+        <section
+          style={{
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "16px",
+            padding: "26px",
+            marginTop: "22px",
+          }}
+        >
+          <h2
+            style={{
+              marginTop: 0,
+              color: "#14532d",
+            }}
+          >
+            How Your Score Is Built
+          </h2>
+
+          <p
+            style={{
+              color: "#64748b",
+              fontSize: "14px",
+              lineHeight: "1.5",
+            }}
+          >
+            AgriTrust uses multiple agricultural signals rather
+            than relying on a single financial indicator.
+          </p>
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "15px",
+              marginTop: "20px",
+            }}
+          >
+            {breakdownRows.map((row) => (
+              <div
+                key={row.name}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "220px 1fr 55px 50px",
+                  alignItems: "center",
+                  gap: "12px",
+                }}
+              >
+                <strong
+                  style={{
+                    fontSize: "14px",
+                    color: "#334155",
+                  }}
+                >
+                  {row.name}
+                </strong>
+
+                <div
+                  style={{
+                    height: "8px",
+                    background: "#e2e8f0",
+                    borderRadius: "10px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${Math.max(
+                        0,
+                        Math.min(100, row.value)
+                      )}%`,
+                      height: "100%",
+                      background: "#166534",
+                      borderRadius: "10px",
+                    }}
+                  />
+                </div>
+
+                <span
+                  style={{
+                    fontSize: "13px",
+                    color: "#475569",
+                    textAlign: "right",
+                  }}
+                >
+                  {row.value}
+                </span>
+
+                <span
+                  style={{
+                    fontSize: "12px",
+                    color: "#94a3b8",
+                    textAlign: "right",
+                  }}
+                >
+                  {row.weight}
+                </span>
+              </div>
+            ))}
+          </div>
         </section>
 
-        {/* Verification Summary */}
-        <section className="recommendation-card">
+        {/* AI explanation */}
+        <section
+          style={{
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "16px",
+            padding: "26px",
+            marginTop: "22px",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+            }}
+          >
+            <Brain
+              size={24}
+              color="#166534"
+            />
 
-          <div>
-            <p>
-              VERIFIED ACTIVITY
-            </p>
-
-            <h2>
-              {intelligence.verified_transactions}
-              {" "}
-              /{" "}
-              {intelligence.total_transactions}
+            <h2
+              style={{
+                margin: 0,
+                color: "#14532d",
+              }}
+            >
+              Explainable AI Insight
             </h2>
-
-            <span>
-              Verified agricultural transactions currently
-              supporting your credit intelligence profile.
-            </span>
           </div>
 
-          <div className="recommendation-purpose">
+          <p
+            style={{
+              marginTop: "16px",
+              color: "#475569",
+              lineHeight: "1.7",
+            }}
+          >
+            {intelligence.explanation}
+          </p>
 
-            <span>
-              Potential purpose
-            </span>
-
-            <strong>
-              {intelligence.suggested_purpose}
+          <div
+            style={{
+              marginTop: "18px",
+              padding: "18px",
+              background: "#f0fdf4",
+              border: "1px solid #bbf7d0",
+              borderRadius: "12px",
+            }}
+          >
+            <strong
+              style={{
+                color: "#14532d",
+              }}
+            >
+              AI-assisted interpretation
             </strong>
 
+            <p
+              style={{
+                margin: "7px 0 0",
+                color: "#475569",
+                lineHeight: "1.6",
+                fontSize: "14px",
+              }}
+            >
+              {aiInsight}
+            </p>
           </div>
 
+          {intelligence.risk_factors &&
+            intelligence.risk_factors.length > 0 && (
+              <div style={{ marginTop: "20px" }}>
+                <strong
+                  style={{
+                    color: "#334155",
+                  }}
+                >
+                  Factors to watch
+                </strong>
+
+                <ul
+                  style={{
+                    color: "#64748b",
+                    lineHeight: "1.7",
+                  }}
+                >
+                  {intelligence.risk_factors.map(
+                    (factor, index) => (
+                      <li key={index}>{factor}</li>
+                    )
+                  )}
+                </ul>
+              </div>
+            )}
         </section>
 
-        {/* Recommendation */}
-        <section className="recommendation-card">
+        {/* Repayment + verification */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "20px",
+            marginTop: "22px",
+          }}
+        >
+          <section
+            style={{
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "16px",
+              padding: "25px",
+            }}
+          >
+            <h2
+              style={{
+                marginTop: 0,
+                color: "#14532d",
+              }}
+            >
+              Repayment Strength
+            </h2>
 
-          <div>
+            <div
+              style={{
+                fontSize: "38px",
+                fontWeight: "800",
+                color: "#166534",
+              }}
+            >
+              {intelligence.repayment_strength}/100
+            </div>
 
-            <p>
-              ILLUSTRATIVE CREDIT EXPOSURE
+            <p
+              style={{
+                color: "#64748b",
+                lineHeight: "1.5",
+              }}
+            >
+              Repayment activity is one of the key components
+              considered by the prototype credit engine.
             </p>
 
-            <h2>
+            <div
+              style={{
+                height: "8px",
+                background: "#e2e8f0",
+                borderRadius: "10px",
+              }}
+            >
+              <div
+                style={{
+                  width: `${Math.min(
+                    100,
+                    intelligence.repayment_strength || 0
+                  )}%`,
+                  height: "100%",
+                  background: "#166534",
+                  borderRadius: "10px",
+                }}
+              />
+            </div>
+          </section>
+
+          <section
+            style={{
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              borderRadius: "16px",
+              padding: "25px",
+            }}
+          >
+            <h2
+              style={{
+                marginTop: 0,
+                color: "#14532d",
+              }}
+            >
+              Verification Summary
+            </h2>
+
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+                marginTop: "15px",
+              }}
+            >
+              <CheckCircle2
+                size={25}
+                color="#166534"
+              />
+
+              <strong
+                style={{
+                  fontSize: "25px",
+                  color: "#166534",
+                }}
+              >
+                {intelligence.verified_transactions}
+              </strong>
+
+              <span
+                style={{
+                  color: "#64748b",
+                }}
+              >
+                of {intelligence.total_transactions} verified
+              </span>
+            </div>
+
+            <p
+              style={{
+                color: "#64748b",
+                lineHeight: "1.5",
+              }}
+            >
+              Verified activity provides stronger evidence for
+              your agricultural credit identity.
+            </p>
+
+            <button
+              onClick={onActivity}
+              style={{
+                padding: "10px 15px",
+                border: "1px solid #166534",
+                borderRadius: "8px",
+                background: "#ffffff",
+                color: "#166534",
+                fontWeight: "700",
+                cursor: "pointer",
+              }}
+            >
+              View Full Activity
+            </button>
+          </section>
+        </div>
+
+        {/* Exposure */}
+        <section
+          style={{
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "16px",
+            padding: "26px",
+            marginTop: "22px",
+          }}
+        >
+          <h2
+            style={{
+              marginTop: 0,
+              color: "#14532d",
+            }}
+          >
+            Illustrative Credit Exposure
+          </h2>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              gap: "10px",
+              flexWrap: "wrap",
+            }}
+          >
+            <span
+              style={{
+                fontSize: "38px",
+                fontWeight: "800",
+                color: "#166534",
+              }}
+            >
               ₹
               {Number(
-                intelligence.recommended_exposure
+                intelligence.recommended_exposure || 0
               ).toLocaleString("en-IN")}
-            </h2>
-
-            <span>
-              Suggested starting exposure based on the
-              current agricultural profile.
             </span>
 
+            <span
+              style={{
+                color: "#64748b",
+              }}
+            >
+              suggested exposure
+            </span>
           </div>
 
-          <div className="recommendation-purpose">
-
-            <span>
-              Potential purpose
-            </span>
-
+          <p
+            style={{
+              color: "#475569",
+              marginBottom: 0,
+            }}
+          >
+            Suggested purpose:{" "}
             <strong>
-              {intelligence.suggested_purpose}
+              {intelligence.suggested_purpose ||
+                "Agricultural working capital"}
             </strong>
+          </p>
 
-          </div>
-
+          <p
+            style={{
+              color: "#94a3b8",
+              fontSize: "12px",
+              marginBottom: 0,
+            }}
+          >
+            Illustrative decision support only — not a final
+            lending approval.
+          </p>
         </section>
 
-        {/* Continue */}
-        <button
-          className="continue-button"
-          onClick={onDataControl}
+        {/* Improvement */}
+        <section
+          style={{
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "16px",
+            padding: "26px",
+            marginTop: "22px",
+          }}
         >
-          Manage Data Sharing
+          <h2
+            style={{
+              marginTop: 0,
+              color: "#14532d",
+            }}
+          >
+            How You Can Improve
+          </h2>
 
-          <ChevronRight size={18} />
-        </button>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "11px",
+            }}
+          >
+            {improvementTips.map((tip, index) => (
+              <div
+                key={index}
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: "10px",
+                  color: "#475569",
+                  lineHeight: "1.5",
+                }}
+              >
+                <CheckCircle2
+                  size={19}
+                  color="#166534"
+                  style={{ flexShrink: 0 }}
+                />
 
-      </main>
+                <span>{tip}</span>
+              </div>
+            ))}
+          </div>
+        </section>
 
+        {/* Bottom actions */}
+        <div
+          style={{
+            display: "flex",
+            gap: "12px",
+            marginTop: "24px",
+          }}
+        >
+          <button
+            onClick={onActivity}
+            style={{
+              flex: 1,
+              padding: "15px",
+              border: "1px solid #166534",
+              borderRadius: "10px",
+              background: "#ffffff",
+              color: "#166534",
+              fontWeight: "700",
+              cursor: "pointer",
+            }}
+          >
+            View Activity History
+          </button>
+
+          <button
+            onClick={onDataControl}
+            style={{
+              flex: 1,
+              padding: "15px",
+              border: "none",
+              borderRadius: "10px",
+              background: "#166534",
+              color: "#ffffff",
+              fontWeight: "700",
+              cursor: "pointer",
+            }}
+          >
+            Control & Share Data{" "}
+            <ChevronRight
+              size={17}
+              style={{
+                verticalAlign: "middle",
+              }}
+            />
+          </button>
+        </div>
+
+        {/* Disclaimer */}
+        <div
+          style={{
+            marginTop: "18px",
+            padding: "15px",
+            borderRadius: "10px",
+            background: "#fffbeb",
+            border: "1px solid #fde68a",
+            color: "#92400e",
+            fontSize: "12px",
+            lineHeight: "1.5",
+          }}
+        >
+          <strong>Prototype note:</strong> AgriTrust's current
+          credit engine is an explainable rule-based prototype.
+          It is intended for decision support and does not
+          represent a bank-grade credit approval or default
+          prediction system.
+        </div>
+      </div>
     </div>
   );
 }

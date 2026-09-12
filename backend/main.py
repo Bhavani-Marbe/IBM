@@ -33,6 +33,7 @@ app = FastAPI(
 )
 
 
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -45,12 +46,35 @@ app.add_middleware(
 )
 
 
-# Register routers
-app.include_router(farmers.router)
-app.include_router(credit_scores.router)
-app.include_router(transactions.router)
-app.include_router(agri_intelligence.router)
+# =========================
+# Register Routers
+# =========================
 
+# These routers already contain their own prefixes
+app.include_router(
+    farmers.router
+)
+
+app.include_router(
+    credit_scores.router
+)
+
+# Transactions does NOT contain the API prefix,
+# so we add it here.
+app.include_router(
+    transactions.router,
+    prefix="/api/v1/transactions",
+    tags=["Transactions"]
+)
+
+app.include_router(
+    agri_intelligence.router
+)
+
+
+# =========================
+# Root
+# =========================
 
 @app.get("/")
 async def root():
@@ -61,6 +85,12 @@ async def root():
     }
 
 
+# =========================
+# Health Check
+# =========================
+
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    return {
+        "status": "healthy"
+    }

@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     # Database
     DATABASE_URL: str = os.getenv(
     "DATABASE_URL",
-    "sqlite:///./agri_credit.db"
+    "sqlite:///D:/IBM/agri_credit.db"
 )
     
     # Security
