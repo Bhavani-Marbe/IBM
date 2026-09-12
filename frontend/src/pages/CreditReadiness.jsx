@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react";
 
-function CreditReadiness({ onBack }) {
+function CreditReadiness({ onBack , onDataControl  }) {
   return (
     <div className="credit-page">
 
@@ -242,7 +242,10 @@ function CreditReadiness({ onBack }) {
         </section>
 
         {/* Continue */}
-        <button className="continue-button">
+        <button
+  className="continue-button"
+  onClick={onDataControl}
+>
           Manage Data Sharing
           <ChevronRight size={18} />
         </button>

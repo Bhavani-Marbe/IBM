@@ -11,6 +11,7 @@ import {
 
 import FarmerDashboard from "./pages/FarmerDashboard";
 import CreditReadiness from "./pages/CreditReadiness";
+import DataControl from "./pages/DataControl";
 import "./index.css";
 
 function App() {
@@ -28,6 +29,16 @@ if (page === "credit") {
   return (
     <CreditReadiness
       onBack={() => setPage("farmer")}
+      onDataControl={() => setPage("data")}
+    />
+  );
+}
+
+if (page === "data") {
+  return (
+    <DataControl
+      onBack={() => setPage("credit")}
+      onShared={() => setPage("shared")}
     />
   );
 }

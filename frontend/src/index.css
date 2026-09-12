@@ -1490,3 +1490,351 @@ h1 span {
     width: 100%;
   }
 }
+
+/* =========================================
+   DATA CONTROL
+   ========================================= */
+
+.consent-banner {
+  margin-top: 30px;
+  padding: 20px;
+
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+
+  border: 1px solid #d5e5d1;
+  border-radius: 15px;
+
+  background: #eaf3e7;
+}
+
+.consent-icon {
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 11px;
+
+  background: white;
+  color: #438049;
+}
+
+.consent-banner h3 {
+  font-size: 15px;
+}
+
+.consent-banner p {
+  max-width: 650px;
+  margin-top: 5px;
+
+  color: #6f7b72;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+/* Sharing */
+
+.sharing-section {
+  margin-top: 40px;
+}
+
+.sharing-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.sharing-header h2 {
+  margin-top: 6px;
+  font-size: 23px;
+}
+
+.purpose-badge {
+  padding: 8px 11px;
+
+  border-radius: 8px;
+
+  background: white;
+  border: 1px solid #dfe7dc;
+
+  color: #59715d;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Data groups */
+
+.data-group {
+  margin-top: 20px;
+
+  border: 1px solid #dfe7dc;
+  border-radius: 15px;
+
+  background: white;
+
+  overflow: hidden;
+}
+
+.data-group-heading {
+  padding: 17px 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  background: #fbfcfa;
+  border-bottom: 1px solid #e7ece5;
+}
+
+.data-group-heading h3 {
+  font-size: 13px;
+}
+
+.data-group-heading span {
+  display: block;
+
+  margin-top: 4px;
+
+  color: #8a948c;
+  font-size: 10px;
+}
+
+.selected-label,
+.private-label {
+  padding: 5px 8px;
+  border-radius: 6px;
+
+  font-size: 8px !important;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+}
+
+.selected-label {
+  background: #e8f3e6;
+  color: #4b7f50;
+}
+
+.private-label {
+  background: #f1f3f0;
+  color: #737c75;
+}
+
+/* Data items */
+
+.data-item {
+  min-height: 76px;
+  padding: 15px 20px;
+
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  border-bottom: 1px solid #edf0eb;
+}
+
+.data-item:last-child {
+  border-bottom: none;
+}
+
+.data-icon {
+  width: 39px;
+  height: 39px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 10px;
+
+  background: #edf5eb;
+  color: #4c854e;
+}
+
+.data-text {
+  flex: 1;
+}
+
+.data-text strong,
+.data-text span {
+  display: block;
+}
+
+.data-text strong {
+  font-size: 12px;
+}
+
+.data-text span {
+  margin-top: 3px;
+
+  color: #8a948c;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.data-check {
+  color: #4c8a50;
+}
+
+.not-shared {
+  margin-top: 15px;
+}
+
+.private-icon {
+  background: #f1f3f0;
+  color: #727c75;
+}
+
+.private-item {
+  background: #fcfcfb;
+}
+
+.lock-icon {
+  color: #8c958e;
+}
+
+/* Final consent */
+
+.final-consent {
+  margin-top: 25px;
+  padding: 16px 18px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  border: 1px solid #dfe7dc;
+  border-radius: 12px;
+
+  background: white;
+}
+
+.consent-check {
+  color: #4d8a51;
+}
+
+.final-consent strong,
+.final-consent span {
+  display: block;
+}
+
+.final-consent strong {
+  font-size: 12px;
+}
+
+.final-consent span {
+  margin-top: 3px;
+  color: #89928b;
+  font-size: 10px;
+}
+
+.share-button {
+  width: 100%;
+  margin-top: 14px;
+  padding: 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  border: none;
+  border-radius: 11px;
+
+  background: #356b3d;
+  color: white;
+
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.share-button:hover {
+  background: #285732;
+}
+
+.privacy-note {
+  margin-top: 12px;
+
+  text-align: center;
+
+  color: #8b948d;
+  font-size: 10px;
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .sharing-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .data-group-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .purpose-badge {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+
+/* =========================================
+   CONSENT TOGGLES
+   ========================================= */
+
+.consent-toggle {
+  width: 42px;
+  height: 24px;
+
+  position: relative;
+  flex-shrink: 0;
+
+  border: none;
+  border-radius: 100px;
+
+  background: #d9dfd8;
+
+  transition: background 0.2s ease;
+}
+
+.consent-toggle span {
+  position: absolute;
+
+  width: 18px;
+  height: 18px;
+
+  top: 3px;
+  left: 3px;
+
+  border-radius: 50%;
+
+  background: white;
+
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+
+  transition: transform 0.2s ease;
+}
+
+.consent-toggle.active {
+  background: #4c8a50;
+}
+
+.consent-toggle.active span {
+  transform: translateX(18px);
+}
+
+.consent-toggle:hover {
+  opacity: 0.9;
+}
