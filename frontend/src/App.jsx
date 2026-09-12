@@ -12,6 +12,7 @@ import {
 import FarmerDashboard from "./pages/FarmerDashboard";
 import CreditReadiness from "./pages/CreditReadiness";
 import DataControl from "./pages/DataControl";
+import ShareConfirmation from "./pages/ShareConfirmation";
 import "./index.css";
 
 function App() {
@@ -39,6 +40,15 @@ if (page === "data") {
     <DataControl
       onBack={() => setPage("credit")}
       onShared={() => setPage("shared")}
+    />
+  );
+}
+
+if (page === "shared") {
+  return (
+    <ShareConfirmation
+      onBack={() => setPage("data")}
+      onDashboard={() => setPage("farmer")}
     />
   );
 }

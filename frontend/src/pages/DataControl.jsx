@@ -25,6 +25,7 @@ function DataControl({ onBack, onShared }) {
       [key]: !current[key],
     }));
   };
+  const selectedCount = Object.values(sharedData).filter(Boolean).length;
   return (
     <div className="credit-page">
 
@@ -118,9 +119,9 @@ function DataControl({ onBack, onShared }) {
             <div className="data-group-heading">
               <div>
                 <h3>Information to share</h3>
-                <span>
-                  These signals help explain your credit readiness.
-                </span>
+<span>
+  {selectedCount} of 4 signals selected
+</span>
               </div>
 
               <span className="selected-label">
@@ -304,12 +305,13 @@ function DataControl({ onBack, onShared }) {
         </section>
 
         <button
-          className="share-button"
-          onClick={onShared}
-        >
-          Confirm & Share
-          <ChevronRight size={18} />
-        </button>
+  className="share-button"
+  onClick={onShared}
+  disabled={selectedCount === 0}
+>
+  Confirm & Share {selectedCount} Signal{selectedCount !== 1 ? "s" : ""}
+  <ChevronRight size={18} />
+</button>
 
         <p className="privacy-note">
           🔒 AgriTrust uses consent-based selective disclosure.
