@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import {
   ArrowRight,
   Brain,
@@ -6,9 +8,30 @@ import {
   ShieldCheck,
   Sprout,
 } from "lucide-react";
+
+import FarmerDashboard from "./pages/FarmerDashboard";
+import CreditReadiness from "./pages/CreditReadiness";
 import "./index.css";
 
 function App() {
+  const [page, setPage] = useState("landing");
+
+if (page === "farmer") {
+  return (
+    <FarmerDashboard
+      onCreditReadiness={() => setPage("credit")}
+    />
+  );
+}
+
+if (page === "credit") {
+  return (
+    <CreditReadiness
+      onBack={() => setPage("farmer")}
+    />
+  );
+}
+
   return (
     <div className="app">
       {/* Navbar */}
@@ -49,10 +72,13 @@ function App() {
             </p>
 
             <div className="hero-actions">
-              <button className="primary-button">
-                I'm a Farmer
-                <ArrowRight size={18} />
-              </button>
+              <button
+  className="primary-button"
+  onClick={() => setPage("farmer")}
+>
+  I'm a Farmer
+  <ArrowRight size={18} />
+</button>
 
               <button className="secondary-button">
                 I'm a Lender
