@@ -86,3 +86,26 @@ class TransactionResponse(TransactionBase):
 
     class Config:
         from_attributes = True
+
+class AgriTrustIntelligenceResponse(BaseModel):
+    farmer_id: str
+    farmer_name: str
+
+    credit_readiness: int
+    risk_level: str
+    recommended_exposure: int
+    suggested_purpose: str
+
+    production_stability: int
+    market_stability: int
+    agricultural_risk: int
+    fpo_strength: int
+
+    repayment_strength: int
+    verified_transactions: int
+    total_transactions: int
+
+    explanation: list[str]
+    risk_factors: list[str]
+
+CreditIntelligence = AgriTrustIntelligenceResponse

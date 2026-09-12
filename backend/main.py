@@ -5,7 +5,13 @@ import logging
 
 from backend.config import settings
 from backend.database import engine, Base
-from backend.routers import farmers, credit_scores, transactions
+
+from backend.routers import (
+    farmers,
+    credit_scores,
+    transactions,
+    agri_intelligence
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -13,7 +19,6 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan events"""
     logger.info("Starting application...")
     Base.metadata.create_all(bind=engine)
     yield
@@ -27,6 +32,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -35,9 +41,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(farmers.router, prefix="/api/v1/farmers", tags=["Farmers"])
-app.include_router(credit_scores.router, prefix="/api/v1/credit-scores", tags=["Credit Scores"])
-app.include_router(transactions.router, prefix="/api/v1/transactions", tags=["Transactions"])
+
+# Register routers
+app.include_router(farmers.router)
+app.include_router(credit_scores.router)
+app.include_router(transactions.router)
+app.include_router(agri_intelligence.router)
 
 
 @app.get("/")

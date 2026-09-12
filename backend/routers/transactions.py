@@ -63,22 +63,29 @@ def list_transactions(skip: int = 0, limit: int = 100, db: Session = Depends(get
 
 
 @router.get("/farmer/{farmer_id}", response_model=List[TransactionResponse])
-def get_farmer_transactions(farmer_id: int, db: Session = Depends(get_db)):
+def get_farmer_transactions(farmer_id: str, db: Session = Depends(get_db)):
     """Get all transactions for a specific farmer"""
     try:
-        # Verify farmer exists
-        farmer = db.query(Farmer).filter(Farmer.id == farmer_id).first()
+        # Find farmer using the public farmer ID
+        farmer = db.query(Farmer).filter(
+            Farmer.farmer_id == farmer_id
+        ).first()
+
         if not farmer:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Farmer not found"
             )
-        
+
+        # Use internal database ID to find transactions
         transactions = db.query(Transaction).filter(
-            Transaction.farmer_id == farmer_id
-        ).order_by(Transaction.transaction_date.desc()).all()
-        
+            Transaction.farmer_id == farmer.id
+        ).order_by(
+            Transaction.transaction_date.desc()
+        ).all()
+
         return transactions
+
     except HTTPException:
         raise
     except Exception as e:
