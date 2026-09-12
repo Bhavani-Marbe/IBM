@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   ArrowRight,
   Bell,
@@ -10,6 +12,34 @@ import {
 } from "lucide-react";
 
 function FarmerDashboard({ onCreditReadiness }) {
+  const [farmer, setFarmer] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch("http://127.0.0.1:8000/api/v1/farmers/FRM-E54DDC4D")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch farmer details");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setFarmer(data);
+      })
+      .catch((error) => {
+        console.error("Error fetching farmer:", error);
+        setError("Unable to load farmer details.");
+      });
+  }, []);
+
+  if (error) {
+    return <div className="farmer-page">{error}</div>;
+  }
+
+  if (!farmer) {
+    return <div className="farmer-page">Loading farmer profile...</div>;
+  }
+
   return (
     <div className="farmer-page">
 
@@ -30,7 +60,12 @@ function FarmerDashboard({ onCreditReadiness }) {
           </button>
 
           <div className="profile-avatar">
-            RK
+            {farmer.name
+              .split(" ")
+              .map((name) => name[0])
+              .join("")
+              .slice(0, 2)
+              .toUpperCase()}
           </div>
         </div>
 
@@ -48,7 +83,7 @@ function FarmerDashboard({ onCreditReadiness }) {
             </p>
 
             <h1>
-              Good morning, Ramesh 👋
+              Good morning, {farmer.name.split(" ")[0]} 👋
             </h1>
 
             <p>
@@ -70,7 +105,12 @@ function FarmerDashboard({ onCreditReadiness }) {
           <div className="profile-main">
 
             <div className="large-avatar">
-              RK
+              {farmer.name
+                .split(" ")
+                .map((name) => name[0])
+                .join("")
+                .slice(0, 2)
+                .toUpperCase()}
             </div>
 
             <div>
@@ -78,11 +118,11 @@ function FarmerDashboard({ onCreditReadiness }) {
                 FARMER PROFILE
               </p>
 
-              <h2>Ramesh Kumar</h2>
+              <h2>{farmer.name}</h2>
 
               <div className="location">
                 <MapPin size={15} />
-                Nashik, Maharashtra
+                {farmer.district}, {farmer.state}
               </div>
             </div>
 
@@ -97,7 +137,7 @@ function FarmerDashboard({ onCreditReadiness }) {
 
             <div>
               <span>Farm Size</span>
-              <strong>2.5 acres</strong>
+              <strong>{farmer.land_size_acres} acres</strong>
             </div>
 
             <div>
@@ -207,9 +247,9 @@ function FarmerDashboard({ onCreditReadiness }) {
           </div>
 
           <button
-  className="readiness-button"
-  onClick={onCreditReadiness}
->
+            className="readiness-button"
+            onClick={onCreditReadiness}
+          >
             View Credit Readiness
             <ArrowRight size={18} />
           </button>
