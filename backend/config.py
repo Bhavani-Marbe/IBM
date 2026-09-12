@@ -13,9 +13,9 @@ class Settings(BaseSettings):
     
     # Database
     DATABASE_URL: str = os.getenv(
-        "DATABASE_URL",
-        "postgresql://postgres:postgres@localhost:5432/agri_credit_db"
-    )
+    "DATABASE_URL",
+    "sqlite:///./agri_credit.db"
+)
     
     # Security
     SECRET_KEY: str = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
